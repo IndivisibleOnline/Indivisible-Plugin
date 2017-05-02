@@ -1,0 +1,4 @@
+1) Subscriber Role is not persisting when users are promoted to pending member validation; this persistence is necessary for sync with Mailchimp.
+ -- It was working at some point.
+ 
+ 
