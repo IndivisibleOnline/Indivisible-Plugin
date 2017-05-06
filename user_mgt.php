@@ -6,13 +6,15 @@
  */
 
 function get_group_info($id=null) {
-
+global $post;
+// global $out;
     // Get post by post ID.
-    if (!empty($id))
+    if (!empty($id)){
 	$post = get_post($id);
-    else
-	$post = get_post( $post->ID );
-	
+	}
+    else{
+	$post = get_post();
+	}
     // Get post type by post.
     $post_type = $post->post_type;
 
@@ -33,7 +35,6 @@ function get_group_info($id=null) {
             }
         }
     }
-//	var_dump($out);
     return $out;
 }
 
@@ -91,9 +92,10 @@ add_shortcode('group_details','get_group_details');
 */
 
 function get_current_group($group_type=null){
-$post = get_post();
-$cat = get_group_info();
-$group_type = $cat['type'];
+global $post;
+	$post = get_post();
+	$cat = get_group_info();
+	$group_type = $cat['type'];
 
 switch ($group_type) {
     case 'topic':
@@ -114,7 +116,7 @@ switch ($group_type) {
 	
                 );
 
-//	'slug' => $cat['term'],
+$slug = $cat['term'];
 
 $pods = pods($group_type, $params);
 
@@ -812,10 +814,10 @@ function iw_updatemembership($atts) {
 			global $current_user;
 			wp_get_current_user();
 			um_fetch_user($current_user->ID);
-			$current_user->add_role('pending_member_validation');
-		//	$current_user->add_role('subscriber');
-		//	wp_update_user( array( 'ID' => $current_user->ID, 'role' => 'pending_member_validation' ) );
     			$ultimatemember->user->set_role( 'pending-validation' );
+			$current_user->add_role('pending_member_validation');
+			$current_user->add_role('subscriber');
+		//	wp_update_user( array( 'ID' => $current_user->ID, 'role' => 'pending_member_validation' ) );
 			return;
 
 		} else {
