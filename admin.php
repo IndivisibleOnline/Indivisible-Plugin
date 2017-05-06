@@ -1,5 +1,4 @@
 <?php
-
 // Add New Post Types to Toolbar
 add_action('wp_before_admin_bar_render','iw_adminbar');
 
@@ -16,6 +15,17 @@ function iw_adminbar(){
    iw_bar_render_item('My Groups','/mygroups');
      $grpurl = get_group_url($userg['term_id']);
    iw_bar_render_item($userg['name'],$grpurl,'My Groups');
+
+$user_groups = get_topic_groups();
+if (isset($user_groups)){
+   iw_bar_render_item('------','#','My Groups');
+}	
+ foreach($user_groups as $group){
+	$url = get_topic_group_url($group);
+	$name = get_topic_group_name($group);
+	iw_bar_render_item($name,$url,'My Groups');
+}
+
  // If user is Authorized, give them Link to Manage Members 
  if(authorized_user()){
    	iw_bar_render_item('Manage Pending Members','/membershipapproval');
@@ -28,6 +38,23 @@ function get_group_url($group){
  $url = $field['guid'];
 return $url;
 }
+
+function get_topic_group_url($group){
+ $pod = pods('topic_groups',$group);
+ $field = $pod->field('group_page_url');
+ $url = $field['guid'];
+return $url;
+}
+
+function get_topic_group_name($group){
+ $pod = pods('topic_groups',$group);
+ $field = $pod->field('name');
+return $field;
+}
+
+
+
+
 
 
 function iw_bar_render_item($name, $href='', $parent='' ,$custom_meta=array()){
@@ -76,7 +103,7 @@ function change_post_titles() {
 	  }
 */
    	}
-       } elseif($post->post_type == 'tribe_events') {
+       } elseif($post->post_type == 'tribe_events--CHANGETHIS') {
  // Tribe Event
   $type = iw_get_type($post);
    	if ($type == 'lg_events'){
@@ -97,7 +124,7 @@ $type = iw_get_type($post);
 }
 
 add_action( 'admin_menu', 'iw_filter_topic_meta_boxes' );
-add_action( 'admin_menu', 'iw_filter_event_meta_boxes');
+// add_action( 'admin_menu', 'iw_filter_event_meta_boxes');
 add_action( 'admin_head', 'change_post_titles');
 add_action( 'admin_head','remove_add_new');
 add_action( 'save_post', 'iw_save_post',10,2);
@@ -417,12 +444,12 @@ $type = iw_get_type($post);
 // if ($type == 'lg_events'){
 	remove_meta_box('topic_groupsdiv', 'tribe_events', 'side');
 	remove_meta_box('local_groupsdiv', 'tribe_events', 'side');
-	remove_meta_box('tribe_events_catdiv' ,'tribe_events' ,'side');
+//	remove_meta_box('tribe_events_catdiv' ,'tribe_events' ,'side');
 //	remove_meta_box('categorydiv', 'post', 'side');
 //	remove_meta_box('topic_groupsdiv', 'post', 'advanced');
 //	remove_meta_box('topic_groupsdiv', 'post', 'normal');
 
-	add_meta_box('iw_events_groupsdiv', __('My Event Categories'), 'iw_filter_event_meta_box', 'tribe_events', 'side', 'high');
+//	add_meta_box('iw_events_groupsdiv', __('My Event Categories'), 'iw_filter_event_meta_box', 'tribe_events', 'side', 'high');
 //	add_meta_box('iw_topic_groupsdiv', __('My Topic Groups'), 'iw_filter_topic_meta_box', 'tg_posts', 'side', 'core');
 // }
 }
@@ -594,11 +621,11 @@ function remove_my_post_metaboxes(){
 if (!authorized_user(array('administrator'))){
 	remove_post_metaboxes('post');
 	remove_post_metaboxes('page');
-	remove_post_metaboxes('tribe_events');
+//	remove_post_metaboxes('tribe_events');
 
 } else {
 	remove_admin_post_metaboxes('post');
-	remove_admin_post_metaboxes('tribe_events');
+//	remove_admin_post_metaboxes('tribe_events');
 }
 
 }
