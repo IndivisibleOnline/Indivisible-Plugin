@@ -7,7 +7,7 @@ include(dirname(__FILE__).'/forums.php');
 include(dirname(__FILE__).'/groups.php');
 include(dirname(__FILE__).'/widgets.php');
 include(dirname(__FILE__).'/admin.php');
-
+include(dirname(__FILE__).'/iw_posts.php');
 
 if ( ! function_exists('write_log')) {
    function write_log ( $log )  {
@@ -422,6 +422,7 @@ function promote_user($userid,$newrole=null){
 	$ur->remove_role('unverified-member');
 	$ur->remove_role('pending_member_validation');
     	$ur->add_role( $new_role );
+	$ur->add_role('subscriber');
 
   //  $user_id = wp_update_user( array( 'ID' => $user_id, 'role' => $new_role ) );
     $ultimatemember->user->set_role( 'group-member' );
@@ -433,8 +434,6 @@ function promote_user($userid,$newrole=null){
     return result($um_role,$user); 
 
 }
-
-
 }
 
 function confirm_email($content=null){
