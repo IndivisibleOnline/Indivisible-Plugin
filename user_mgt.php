@@ -109,11 +109,11 @@ switch ($group_type) {
     }
 
 // Extract the slug from the URL
-// $slug = pods_v('first','url' ); 
+// $slug = pods_v('first','url' );
 
 	 	$params = array(
 		'where' => 't.term_id =' . $cat['id'],
-	
+
                 );
 
 $slug = $cat['term'];
@@ -127,7 +127,7 @@ while ($pods->fetch() ) {
 	$id = $pods->display('id');
 	$tid = $pods->display('term_id');
 	$thisslug = $pods->display('slug');
-	
+
 	if ($thisslug == $slug){
 	$currentid = $id;
 	}
@@ -200,7 +200,7 @@ add_action('admin_post_nopriv_leavetopicgroup','iw_remove_user_from_topicgroup')
 function iw_add_user_to_topicgroup($gid=null){
 	global $current_user;
 	wp_get_current_user();
-	
+
 // Can Set GROUP (POD) ID through form data (pid) or passed argument
 
 if (!empty($_POST['pid'])){
@@ -231,7 +231,7 @@ if (!empty($_POST['pid'])){
 function iw_remove_user_from_topicgroup($gid = null){
 	global $current_user;
 	wp_get_current_user();
-	
+
 	if (!empty($_POST['pid'])){
 	$gid = $_POST['pid'];
 	}
@@ -311,8 +311,8 @@ if( $gtype == 'topic' ) {
 	$grouptype = 'local_group';
 	}
 
-    $userid = $uid;   
-	$user = get_user_by('id',$userid); 
+    $userid = $uid;
+	$user = get_user_by('id',$userid);
 	$user_role = $user->roles;
 
 	$tpod = pods("user", $userid);
@@ -365,7 +365,7 @@ if ($sid == $aid){
 
 
 /*
- NAME: user_role_edit 
+ NAME: user_role_edit
  Shortcode: iw-editrole
  FUNCTION: Displays form to approve or assign pending users
  RETURNS: Nothing; Displays forms
@@ -382,10 +382,10 @@ if (authorized_user()){
 		//	$um_user_role = get_user_meta($user->ID,'role',true);
 		$valid_roles = array('subscriber','pending_member_validation');
 		get_header();
-	
-		ob_start();		
 
-		if (authorized_user(array('administrator','groups_administrator'))){ 	
+		ob_start();
+
+		if (authorized_user(array('administrator','groups_administrator'))){
 
 			echo "<strong> ASSIGN USERS TO GROUPS FOR APPROVAL BY GROUP LEADERS</strong>";
 
@@ -395,33 +395,33 @@ if (authorized_user()){
 					<tr>
 						<th>  <label for="username">MEMBERSHIP APPROVAL</label>
 							<label for="um_role"> & LOCAL GROUP ASSIGNMENT   </label>
-						</th> 
+						</th>
 
 						<tr>
 						<td>
 							<form action="<?php echo esc_url( admin_url('admin-post.php') ); ?>" method="post" name="assign">
 							<input type="hidden" name="action" value="assigntogroup" />
 							<select name="user" id ="user">
-							<?php 
+							<?php
 							$pcount = 0;
 							foreach(get_users_by_role($valid_roles) as $selecteduser){ ?>
 							<?php um_fetch_user($selecteduser->ID);
 							$pcount += 1;
 							$localname='';
- 							if (( $ultimatemember->user->get_role() == 'pending-validation' ) ) 
+ 							if (( $ultimatemember->user->get_role() == 'pending-validation' ) )
  									{
 									$local = get_local_group($selecteduser->ID);
-								 	if ($local){	
+								 	if ($local){
 									$localname = " @ " .$local['name'];
 									}
-		
-							
+
+
 							?>
  							<option value="<?php echo $selecteduser->ID; ?>"> <?php echo $selecteduser->user_email . " (" . $selecteduser->display_name .") - [" . getuserroles($selecteduser->ID) . $localname . "]"; ?></option>
 							<?php
 									}
 
-							 } ?> 
+							 } ?>
 							</select>
 							<select name="gid" id="gid">
 								<?php
@@ -434,8 +434,8 @@ if (authorized_user()){
 							<?php
 								} ?> </select>
 							<?php
-														
-							if (authorized_user(array('administrator','groups_administrator'))){ 
+
+							if (authorized_user(array('administrator','groups_administrator'))){
 								echo "<br>This will only assign the user to a Group Leader for Validation.";
 							}
 							?>
@@ -444,11 +444,11 @@ if (authorized_user()){
 					</tr>
 				</tbody>
 			</table><br><br><br>
-		<?php 
+		<?php
 		}
 
-	
-				if (authorized_user(array('administrator','groups_administrator'))){ 	
+
+				if (authorized_user(array('administrator','groups_administrator'))){
 
 				echo "<strong> APPROVE & ASSIGN USERS TO GROUPS (WITHOUT APPROVAL BY GROUP LEADER)</strong>";
 
@@ -459,33 +459,33 @@ if (authorized_user()){
 					<tr>
 						<th>  <label for="username">MEMBERSHIP APPROVAL</label>
 							<label for="um_role"> & LOCAL GROUP ASSIGNMENT   </label>
-						</th> 
+						</th>
 
 						<tr>
 						<td>
 							<form action="<?php echo esc_url( admin_url('admin-post.php') ); ?>" method="post" name="confirm">
 							<input type="hidden" name="action" value="confirmapproval" />
 							<select name="user" id ="user">
-							<?php 
+							<?php
 							$pcount = 0;
 							foreach(get_users_by_role($valid_roles) as $selecteduser){ ?>
 							<?php um_fetch_user($selecteduser->ID);
 							$pcount += 1;
- 							if (( $ultimatemember->user->get_role() == 'pending-validation' ) && (iw_assigned($selecteduser->ID)) ) 
+ 							if (( $ultimatemember->user->get_role() == 'pending-validation' ) && (iw_assigned($selecteduser->ID)) )
  									{
  								?>
 									<option value="<?php echo $selecteduser->ID; ?>"> <?php echo $selecteduser->user_email . " (" . $selecteduser->display_name .") - [PENDING]"; ?></option>
-							
-							<?php  	} elseif (authorized_user(array('administrator','groups_administrator'))){ 
+
+							<?php  	} elseif (authorized_user(array('administrator','groups_administrator'))){
 								?>
 									<option value="<?php echo $selecteduser->ID; ?>"> <?php echo $selecteduser->user_email . " (" . $selecteduser->display_name .") - [" . getuserroles($selecteduser->ID) . "]"; ?></option>
 							<?php
 									}
 
-							 } ?> 
+							 } ?>
 							</select>
-							<?php 
-							if (authorized_user(array('administrator','groups_administrator'))){ 
+							<?php
+							if (authorized_user(array('administrator','groups_administrator'))){
 								?>
 								<select name="group" id="group">
 								<?php
@@ -501,11 +501,11 @@ if (authorized_user()){
 								 $gname = $group['name'] ;
 								 $gid = $group['term_id'];
 								?><input type="hidden" name="group" value="<?php echo $gid; ?>"/> <br>Approve and assign to <?php echo $gname; ?>
-								<?php	
-							
+								<?php
+
 							}
-							
-							if (authorized_user(array('administrator','groups_administrator'))){ 
+
+							if (authorized_user(array('administrator','groups_administrator'))){
 								echo "<br>This will approve and assign the user.";
 							}
 							?>
@@ -530,7 +530,7 @@ wp_get_current_user();
 if (empty ($_POST['group'])){
 
 $group = get_local_group($current_user->ID);
-$gname = group['name'];
+$gname = $group['name'];
 
 } else {
 
@@ -557,7 +557,7 @@ $user = $_POST['user'];
 				<tbody>
 							<th>  <label for="username">MEMBERSHIP APPROVAL</label>
 							<label for="um_role"> & LOCAL GROUP ASSIGNMENT   </label>
-						</th> 
+						</th>
 
 
 					<tr>
@@ -605,8 +605,8 @@ function user_role_approve($gid=null) {
 
 			//Promote Users WP & UM Role
 			promote_user($user);
-			
-			//Approve Account to trigger Notification	
+
+			//Approve Account to trigger Notification
 			global $ultimatemember;
 			um_fetch_user( $user );
 			$ultimatemember->user->pending();
@@ -618,7 +618,7 @@ function user_role_approve($gid=null) {
 			// Add User to Local Group
 			add_user_to_group($user,'local',$gid);
 
-		
+
 		echo "Success" . " <a href='" . get_site_url() . "/membershipapproval'>Click to Continue</a>";
 
 		 }
@@ -683,7 +683,7 @@ function user_assign($gid=null) {
 /*
  NAME: getuserroles (Params: UserID)
  FUNCTION: Returns a comma delimited list of roles for a specific user
- RETURNS: Comma-delimited list 
+ RETURNS: Comma-delimited list
 */
 function getuserroles($uid){
 // Return the roles for a specific user (separated by commas)
@@ -740,7 +740,7 @@ add_shortcode ( 'non_member', 'um_non_member_shortcode' );
 
 // Function returns true if current member's role is in specified $role.
 function um_is_member_role( $role ) {
-  
+
   // Return true if no user role provided and user is logged in.
   if ( !$role ) {
 	if ( is_user_logged_in() ) {
@@ -824,9 +824,9 @@ function iw_updatemembership($atts) {
 			 echo "<strong>There's something happening here.... what it is ain't exactly clear. Please contact your Group Leader or Site Administrator.</strong>";
 			 return;
 		}
- 	} 
+ 	}
  	else {
  		echo "Nothing to do here";
  		return;
  	}
- } 
+ }
