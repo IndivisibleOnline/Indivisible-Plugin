@@ -2,54 +2,79 @@
 // Add New Post Types to Toolbar
 add_action('wp_before_admin_bar_render','iw_adminbar');
 
+/*
+    NAME: iw_adminbar (Params: None)
+    FUNCTION: Render black menu bar at top of page
+    RETURNS: None
+
+    Displays only those options relevant to the role of the user
+*/
+
 function iw_adminbar(){
-   $userg = get_local_group();
-   iw_bar_render_item('Topic Group Post','/wp-admin/post-new.php?type=tgp','new-content');
-  // Any Group Member can create a Post
-   iw_bar_render_item($userg['name'] . ' Group Post','/wp-admin/post-new.php?type=lgp','new-content');
-  // Only Group Leaders can create Group Pages or Group Events
- if(authorized_user(array('administrator','group_leader'))){
-   iw_bar_render_item($userg['name'] . ' Group PAGE','/wp-admin/post-new.php?post_type=page&type=lgp','new-content');
-   iw_bar_render_item($userg['name'] . ' Event','/wp-admin/post-new.php?post_type=tribe_events&type=lge','new-content');
-   }
-   iw_bar_render_item('My Groups','/mygroups');
-     $grpurl = get_group_url($userg['term_id']);
-   iw_bar_render_item($userg['name'],$grpurl,'My Groups');
+    $userg = get_local_group();
+    iw_bar_render_item('Topic Group Post','/wp-admin/post-new.php?type=tgp','new-content');
+    // Any Group Member can create a Post
+    iw_bar_render_item($userg['name'] . ' Group Post','/wp-admin/post-new.php?type=lgp','new-content');
+    // Only Group Leaders can create Group Pages or Group Events
+    if(authorized_user(array('administrator','group_leader'))){
+        iw_bar_render_item($userg['name'] . ' Group PAGE','/wp-admin/post-new.php?post_type=page&type=lgp','new-content');
+        iw_bar_render_item($userg['name'] . ' Event','/wp-admin/post-new.php?post_type=tribe_events&type=lge','new-content');
+    }
+    iw_bar_render_item('My Groups','/mygroups');
+    $grpurl = get_group_url($userg['term_id']);
+    iw_bar_render_item($userg['name'],$grpurl,'My Groups');
 
-$user_groups = get_topic_groups();
-if (isset($user_groups)){
-   iw_bar_render_item('------','#','My Groups');
-}	
- foreach($user_groups as $group){
-	$url = get_topic_group_url($group);
-	$name = get_topic_group_name($group);
-	iw_bar_render_item($name,$url,'My Groups');
+    $user_groups = get_topic_groups();
+    if (isset($user_groups)){
+        iw_bar_render_item('------','#','My Groups');
+    }
+    foreach($user_groups as $topic_group){
+        $url = get_topic_group_url($topic_group);
+        $name = get_topic_group_name($topic_group);
+        iw_bar_render_item($name,$url,'My Groups');
+    }
+
+    // If user is Authorized, give them Link to Manage Members
+    if(authorized_user()){
+    	iw_bar_render_item('Manage Pending Members','/membershipapproval');
+    }
 }
 
- // If user is Authorized, give them Link to Manage Members 
- if(authorized_user()){
-   	iw_bar_render_item('Manage Pending Members','/membershipapproval');
-   }
+/*
+    NAME: get_group_url (Params: $group - 'local_group' object from PODS)
+    FUNCTION: Extract the group url from PODS given local group
+    RETURNS: WP Page reference - URL for the local group
+
+    // TODO: I I think this is a dupe db hit, since the group_url is already part of the $group arg
+*/
+function get_group_url($local_group){
+    $pod=pods('local_groups',$local_group);
+    $field=$pod->field('group_page_url');
+    $url = $field['guid'];
+    return $url;
 }
 
-function get_group_url($group){
- $pod=pods('local_groups',$group);
- $field=$pod->field('group_page_url');
- $url = $field['guid'];
-return $url;
+/*
+    NAME: get_topic_group_url (Params: $topic_group - 'topic_group' object from PODS)
+    FUNCTION: Extract the topic group url from PODS given a topic group
+    RETURNS: WP Page reference - URL for the topic group
+*/
+function get_topic_group_url($topic_group){
+    $pod = pods('topic_groups',$topic_group);
+    $field = $pod->field('group_page_url');
+    $url = $field['guid'];
+    return $url;
 }
 
-function get_topic_group_url($group){
- $pod = pods('topic_groups',$group);
- $field = $pod->field('group_page_url');
- $url = $field['guid'];
-return $url;
-}
-
-function get_topic_group_name($group){
- $pod = pods('topic_groups',$group);
- $field = $pod->field('name');
-return $field;
+/*
+    NAME: get_topic_group_url (Params: $topic_group - 'topic_group' object from PODS)
+    FUNCTION: Extract the topic group url from PODS given a topic group
+    RETURNS: WP Page reference - URL for the topic group
+*/
+function get_topic_group_name($topic_group){
+    $pod = pods('topic_groups',$topic_group);
+    $field = $pod->field('name');
+    return $field;
 }
 
 
@@ -75,17 +100,17 @@ global $wp_admin_bar;
 // Change the Post Title to Reflect Current Type of Post
 function change_post_titles() {
  global $post, $title, $action, $current_screen;
- if ($post->post_type == 'post' || $post->post_type == 'page'){ 
+ if ($post->post_type == 'post' || $post->post_type == 'page'){
 	$type = iw_get_type($post);
 	if ($type == 'lg_posts'){
 	  $userg = get_local_group();
-//	  $groupid = $userg['term_id'];	
+//	  $groupid = $userg['term_id'];
           $title = "ADD NEW ". strtoupper($post->post_type) ." IN " . htmlspecialchars_decode(strtoupper($userg['name']));
-	// Also make sure that Post Meta type reflects the proper group type  
+	// Also make sure that Post Meta type reflects the proper group type
  	update_post_meta($post->ID,'iw_post_type','lg_posts');
 	} elseif ($type == 'tg_posts') {
 	  $title = "ADD NEW TOPIC GROUP POST -- REMEMBER TO SELECT YOUR TOPIC GROUP---------->";
-	// Also make sure that Post Meta type reflects the proper group type  
+	// Also make sure that Post Meta type reflects the proper group type
 	  update_post_meta($post->ID,'iw_post_type','tg_posts');
 	//  $test = get_post_meta($post->ID,'iw_post_type',true);
 	//  $title = "Add New Post in " . $test;
@@ -130,7 +155,7 @@ add_action( 'admin_head','remove_add_new');
 add_action( 'save_post', 'iw_save_post',10,2);
 
 function set_group_sidebar($post_id){
-$pg = is_group_page($post_id); 
+$pg = is_group_page($post_id);
 if ($pg==true){
           remove_action( 'save_post', 'iw_save_post',10,2);
 	  update_post_meta( $post_id, '_wp_page_template', 'side-navigation.php' );
@@ -154,7 +179,7 @@ function iw_save_post($post_id,$post){
 	set_group_sidebar($post_id);
   } elseif ($type == 'lg_events'){
 	save_localgroup_event($post_id,$post);
-   
+
   } else {
 
    // IF the Page is a group then it should have the proper template and sidebar associated with it.
@@ -225,7 +250,7 @@ function is_group_page($postid=null){
  } else {
 	$group = wp_get_object_terms($postid,'topic_groups');
  }
- 
+
  if (!empty($group)){
 	$result = true;
  }
@@ -252,12 +277,12 @@ $type = iw_get_type($post);
         if ( !authorized_user(array('administrator')) && is_null($groupid) ) {
                 if (!authorized_user('administrator')){
                  echo" Insert Redirect here... can't post without a group";
-                 remove_meta_box( 'submitdiv','lg_posts','normal' ); 
+                 remove_meta_box( 'submitdiv','lg_posts','normal' );
         // Categories Metabox
                  wp_redirect( home_url() . '/error' ); exit;
                 } else {
                 // add_meta_box( 'local_groupsdiv',$type,'normal' ); // Custom Fields Metabox
-                 remove_meta_box( 'submitdiv','lg_posts','normal' ); 
+                 remove_meta_box( 'submitdiv','lg_posts','normal' );
                 }
         } else {
                 $result = wp_set_object_terms($post_id, $groupname, 'local_groups');
@@ -271,7 +296,7 @@ function save_localgroup_post($post_id,$post) {
 
 $type = iw_get_type($post);
 
-//  $type = $_POST['iw_post_type']; 
+//  $type = $_POST['iw_post_type'];
 //	write_log('We ARE SAVING...' . $type);
 
   if($type == 'lg_posts') {
@@ -281,7 +306,7 @@ $type = iw_get_type($post);
 	if ( !authorized_user(array('administrator')) && is_null($groupid) ) {
 		if (!authorized_user('administrator')){
 		 echo" Insert Redirect here... can't post without a group";
-		 remove_meta_box( 'submitdiv','lg_posts','normal' ); 
+		 remove_meta_box( 'submitdiv','lg_posts','normal' );
 	// Categories Metabox
 		 wp_redirect( home_url() . '/error' ); exit;
 		} else {
@@ -429,7 +454,7 @@ function iw_filter_topic_meta_box( $post ) {
 		$html .= '<input type="checkbox" class="required" name="tax_input[topic_groups][]" value="'.$id .'"' . $selected . '/>' . $name . ' <br />';
                 }
 
-	set_topic_group_category();	
+	set_topic_group_category();
 	$html .= '</div></div></div></div>';
 	}
 	echo $html;
@@ -520,7 +545,7 @@ add_action('admin_menu', 'remove_menus');
 function ipstenu_admin_bar_remove() {
         global $wp_admin_bar;
 //    if(!authorized_user(array('administrator')))
-//	{ 
+//	{
         /* Remove their stuff */
         $wp_admin_bar->remove_menu('todolist');
         $wp_admin_bar->remove_menu('dashboard');
@@ -568,7 +593,7 @@ function ipstenu_admin_bar_remove() {
 //  }
 
 }
- 
+
 add_action('wp_before_admin_bar_render', 'ipstenu_admin_bar_remove', 80);
 // add_action('admin_bar_menu', 'ipstenu_admin_bar_remove', 80);
 
@@ -591,7 +616,7 @@ function remove_admin_menu_links(){
 	remove_menu_page('edit-comments.php');
 	remove_menu_page('page.php');
 	remove_menu_page('upload.php');
-	remove_menu_page( 'edit.php?post_type=page' ); 
+	remove_menu_page( 'edit.php?post_type=page' );
 	remove_menu_page( 'edit.php?post_type=videos' );
 	remove_menu_page( 'edit.php' );
 	remove_theme_support( 'avada-admin-menu' );

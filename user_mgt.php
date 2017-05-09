@@ -138,12 +138,10 @@ return $currentid;
 /*
  NAME: get_local_group (Params: UserID)
  FUNCTION: GET LOCAL GROUP of a User (defaults to current user)
- RETURNS: Local Group ???
+ RETURNS: Local group object ('local_group') as defined by PODS custom type
 */
 
 function get_local_group($userid=null){
-// Gets the Users Local Group
-// Defaults to Current User
 
 	if (!$userid){
 		global $current_user;
