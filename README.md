@@ -4,19 +4,22 @@ The Custom Plugin that Powers IW Wordpress Site
 Files relating to the plugin are:
 
 indivisible.php - Standard wordpress discovery file.  Implements version checking, etc
+indivisible_init.php - Standard wordpress initialization file.  Executed each time plugin is activated
+Indivisible_InstallIndicator.php - Standard wordpress file - used during plugin installation
+Indivisible_LifeCycle.php - Register plugin, install wp-admin handlers and submenus
+
 admin.php - Display and functionality of the administration page(s) in wp-admin for the IW content
 groups.php - Display and functionality for rendering topic group pages
 
 
-Indivisible_InstallIndicator.php
-Indivisible_LifeCycle.php
+
+
 Indivisible_OptionsManager.php
 Indivisible_Plugin.php
 Indivisible_ShortCodeLoader.php
 Indivisible_ShortCodeScriptLoader.php
 forums.php
 groups.php
-indivisible_init.php
 indivisible_main.php
 iw_posts.php
 user_mgt.php

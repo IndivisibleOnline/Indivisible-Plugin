@@ -20,17 +20,23 @@ if ( ! function_exists('write_log')) {
 }
 
 
+/*
+    @brief: Check whether the currently active user is 'authorized' for a given (or any) role
+    @param: $role - the (string) roll we want to check to see if the user is in
+    @return: true if the currently active user is privileged for that role, false else
 
+    Default input of null, checks to see if loaded user is part of a 'leadership' role
+*/
 function authorized_user($role = null){
 	$allowed_roles='';
 	$result = false;
 
-	
+
 	if (empty($user)){
 		$current_user = wp_get_current_user();
 		$user_id = $current_user->ID;
 		$user_role = $current_user->roles;
-		
+
 		} else {
 		$user_role = $user->roles;
 		}
@@ -39,7 +45,7 @@ function authorized_user($role = null){
 		} else {
 		$allowed_roles = $role;
 		}
-	
+
 	if (is_array($user_role)){
 		$myroles = explode(",",implode(",",$user_role));
 	} else {
@@ -57,9 +63,12 @@ function authorized_user($role = null){
 }
 
 
+/*
+    @brief: Get list of Groups of a specific type for the active user
+    @param: $atts - (string) label describing type of group we want the list of ('topic' or 'local')
+    @return: Returns the HTML of how we want to render this data (not an actual list of groups)
+*/
 function get_user_group_list($atts){
-
-// Get list of Groups (topic or local based on $atts) for a specific user
 
  $atts = array_change_key_case((array)$atts, CASE_LOWER);
     // override default attributes with user attributes
@@ -116,6 +125,10 @@ function get_user_group_list($atts){
 }
 
 
+/*
+    @brief: Get list of all available local groups
+    @return: Array of PODS objects - complete list of local groups in system
+*/
 function get_local_group_list(){
 
 $param = array(
@@ -134,6 +147,14 @@ return $allpods;
 
 add_shortcode('iw_usergroups','get_user_group_list');
 
+
+/*
+    @brief: Get list of Groups of a specific type for the active user
+    @param: $atts - (string) label describing type of group we want the list of ('topic' or 'local')
+    @return: Returns the HTML of one way to render this data (not an actual list of groups)
+
+    TODO:  I believe this is not actually used anywhere - can this be removed entirely?
+*/
 function get_group_list($atts){
 
 // Get list of Groups (topic or local based on $atts) for a specific user
@@ -158,13 +179,13 @@ function get_group_list($atts){
 	$gname = $allpods->display('name') ;
 	$grpfield = $allpods->field( 'group_page_url');
 	$grpurl= $grpfield ['pod_item_id'];
-	
+
         $htmlresult .= "<li><a href='" . get_permalink($grpurl) . "'>" . $gname . " </a></li>";
-       }  
+       }
        }
 // Loop over each item since it's an array
-            
-          
+
+
 
     $htmlresult .= "</ul></div>";
 
@@ -175,80 +196,86 @@ function get_group_list($atts){
 add_shortcode('iw_listgroups','get_group_list');
 
 
+/*
+    @brief: Get list of topic groups for the current user
+    @return: Returns the an array of PODS objects - the topic groups related to a user
+*/
 function get_topic_tax_groups(){
 
-// Get list of Groups (topic or local based on $atts) for a specific user
+    // Get list of Groups (topic or local based on $atts) for a specific user
+    global $current_user;
+    wp_get_current_user();
 
-	  global $current_user;
-    	  wp_get_current_user();
+    if($userid == null){
+        $userid = $current_user->ID;
+    }
 
-	if($userid == null){
-            $userid = $current_user->ID;
-	}
+     $tpod = pods("user", $userid);
+     $trelated = $tpod->field( 'topic_groups' );
 
-             $tpod = pods("user", $userid);
-             $trelated = $tpod->field( 'topic_groups' );
-
-
-	return $trelated;
-
+    return $trelated;
 }
 
 
 add_action('admin_post_joingroup','frm_join_group');
 add_action('admin_post_nopriv_joingroup','frm_join_group');
 
+
+/*
+    @brief: Calls add_user_to_group for the current user and group type/id in the _REQUEST object
+
+    As a side efffect, redirects via 'get_permalink'
+*/
 function frm_join_group() {
+    global $current_user;
+
+    if ( ! empty( $_REQUEST ) ) {
+
+        $type = $_REQUEST['type'];
+        $grpid = $_REQUEST['gid'];
+        // $user_id = $_POST['userid'];
+
+        $current_user = wp_get_current_user();
+        $user_id = $current_user->ID;
+        // Sanitize the POST field
+        // Generate email content
+        // Send to appropriate email
+
+        //      global $ultimatemember;
+        //      $current_user = wp_get_current_user();
+        //      $user_id = $current_user->ID;
+        //      $user_role = $current_user->roles;
+        //      um_fetch_user($user_id);
+        //      $um_role = um_user('role');
+        //      $ur = new WP_User ($user_id);
 
 
-global $current_user;
+        add_user_to_group($user_id,$type,$grpid);
+    }
 
-if ( ! empty( $_REQUEST ) ) {
- 
- $type = $_REQUEST['type'];
- $grpid = $_REQUEST['gid'];
-// $user_id = $_POST['userid'];
-
-     $current_user = wp_get_current_user();
-     $user_id = $current_user->ID;
-   // Sanitize the POST field
-    // Generate email content
-    // Send to appropriate email
-
-  //      global $ultimatemember;
-  //      $current_user = wp_get_current_user();
-  //      $user_id = $current_user->ID;
-  //      $user_role = $current_user->roles;
-  //      um_fetch_user($user_id);
-  //      $um_role = um_user('role');
-  //      $ur = new WP_User ($user_id);
-
-
-	add_user_to_group($user_id,$type,$grpid);
-}
-
- wp_redirect( get_permalink() ); exit;
+    wp_redirect( get_permalink() ); exit;
 
 }
 
 
-
-// Prevent users from seeing administrators
 
 add_action('pre_user_query','yoursite_pre_user_query');
 
+/*
+    @brief: Prevent users from seeing administrators
+*/
 function yoursite_pre_user_query($user_search) {
     $user = wp_get_current_user();
 
-    if ( $user->roles[0] != 'administrator' ) { 
+    if ( $user->roles[0] != 'administrator' ) {
         global $wpdb;
 
-        $user_search->query_where = 
-        str_replace('WHERE 1=1', 
+        $user_search->query_where =
+        str_replace('WHERE 1=1',
             "WHERE 1=1 AND {$wpdb->users}.ID IN (
-                 SELECT {$wpdb->usermeta}.user_id FROM $wpdb->usermeta 
-                    WHERE {$wpdb->usermeta}.meta_key = '{$wpdb->prefix}user_level' 
-                    AND {$wpdb->usermeta}.meta_value = 0)", 
+                 SELECT {$wpdb->usermeta}.user_id FROM $wpdb->usermeta
+                    WHERE {$wpdb->usermeta}.meta_key = '{$wpdb->prefix}user_level'
+                    AND {$wpdb->usermeta}.meta_value = 0)",
             $user_search->query_where
         );
 
@@ -257,8 +284,11 @@ function yoursite_pre_user_query($user_search) {
 
 
 
-//this will prevent users from promoting others to administrator
-
+/*
+    @brief: Prevent users from promoting others to administrator
+    @param: $all_roles - Complete list of roles available on system
+    @return: Version of originally input roles list without leadership roles
+*/
 function deny_change_to_admin( $all_roles )
 
 {
@@ -280,17 +310,24 @@ function deny_change_to_admin( $all_roles )
 
     return $all_roles;
 }
+
+/*
+    @brief: Applies a filter to the roles available for the current user to apply based on function deny_change_to_admin
+*/
 function deny_rolechange()
 {
     add_filter( 'editable_roles', 'deny_change_to_admin' );
 }
+
 add_action( 'after_setup_theme', 'deny_rolechange' );
 
 
 
-//Expand Author Drop down to include Group Leaders, and IW Leadership
-
-
+/*
+    @brief: Expand Author Drop down to include Group Leaders, and IW Leadership
+    @param: $output - Array to be used for call to wp_dropdown_users, used for available list of authors
+    @return: Modified version of $output, which includes an expanded list of users
+*/
 function author_override( $output ) {
     global $post, $user_ID;
 
@@ -322,12 +359,12 @@ $userslist = implode( ',', $array_of_users_ids );
 
     // replacement call to wp_dropdown_users
       $output = wp_dropdown_users(array(
-        'echo' => 0,
-	'include' => $userslist,
-	'orderby' => 'display_name',
-        'name' => 'post_author_override_replaced',
-        'selected' => empty($post->ID) ? $user_ID : $post->post_author,
-        'include_selected' => true,
+                                        'echo' => 0,
+                                        'include' => $userslist,
+                                        'orderby' => 'display_name',
+                                        'name' => 'post_author_override_replaced',
+                                        'selected' => empty($post->ID) ? $user_ID : $post->post_author,
+                                        'include_selected' => true,
       ));
 
       // put the original name back
@@ -431,7 +468,7 @@ function promote_user($userid,$newrole=null){
   else
   {
   // There was an error, probably that user doesn't exist.
-    return result($um_role,$user); 
+    return result($um_role,$user);
 
 }
 }
@@ -465,7 +502,7 @@ function confirm_email($content=null){
 	else
 	{
 	// There was an error, probably that user doesn't exist.
-		return result($um_role,$current_user);	
+		return result($um_role,$current_user);
 	}
 
 }

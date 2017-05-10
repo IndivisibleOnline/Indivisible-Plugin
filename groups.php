@@ -159,9 +159,9 @@ $title = __( 'Related Posts', 'relatedpages_widget_domain' );
 
 // Updating widget replacing old instances with new
 public function update( $new_instance, $old_instance ) {
-$instance = array();
-$instance['title'] = ( ! empty( $new_instance['title'] ) ) ? strip_tags( $new_instance['title'] ) : '';
-return $instance;
+    $instance = array();
+    $instance['title'] = ( ! empty( $new_instance['title'] ) ) ? strip_tags( $new_instance['title'] ) : '';
+    return $instance;
 }
 } // Class wpb_widget ends here
 
@@ -169,6 +169,8 @@ return $instance;
 function iwgroup_load_widget() {
 	register_widget( 'relatedpages_widget' );
 }
+
+
 add_action( 'widgets_init', 'iwgroup_load_widget' );
 
 
