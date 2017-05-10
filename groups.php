@@ -3,6 +3,10 @@
 
 add_action( 'wp', 'check_localgroup_access');
 
+/*
+    @brief: Checks whether current user is privileged for the group page being accessed, redirects if not
+    @return: None
+*/
 function check_localgroup_access() {
     if (!authorized_user(array('administrator')) ) {
         // Only target the front end
@@ -30,13 +34,20 @@ function check_localgroup_access() {
   }
 }
 
+/*
+    @brief: Generates list of related posts, renders some UI elements for display of those posts
+    @return: Results of db query for related posts (related via tagging system)
+
+    Content from this api is displayed in the sidebar of the local groups page
+    This is currently a wrapper to the list_related_posts() api
+*/
 function iw_list_related_posts(){
 
-$html = list_related_posts();
-
-return $html;
+    $html = list_related_posts();
+    return $html;
 }
 
+// TODO: This currently looks to be unused
 function iw_list_childposts(){
 
 global $post;
@@ -85,6 +96,7 @@ if ($childpages){
 }
 return $string;
 }
+
 
 add_shortcode('iw_related_posts','iw_list_related_posts');
 
