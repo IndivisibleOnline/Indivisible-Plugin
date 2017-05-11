@@ -11,6 +11,7 @@ Indivisible_LifeCycle.php - Register plugin, install wp-admin handlers and subme
 admin.php - Display and functionality of the administration page(s) in wp-admin for the IW content
 groups.php - Display and functionality for rendering topic group pages
 
+indivisible_main.php - Various functionality to access IW tables and occasionally render results.
 
 
 
@@ -20,7 +21,6 @@ Indivisible_ShortCodeLoader.php
 Indivisible_ShortCodeScriptLoader.php
 forums.php
 groups.php
-indivisible_main.php
 iw_posts.php
 user_mgt.php
 widgets.php
