@@ -8,6 +8,7 @@ include(dirname(__FILE__).'/groups.php');
 include(dirname(__FILE__).'/widgets.php');
 include(dirname(__FILE__).'/admin.php');
 include(dirname(__FILE__).'/iw_posts.php');
+include(dirname(__FILE__).'/events.php');
 
 if ( ! function_exists('write_log')) {
    function write_log ( $log )  {
