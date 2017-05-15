@@ -1,4 +1,5 @@
  <?php
+ // include_once('posts.php');
 
 add_action( 'wp', 'check_localgroup_access');
 
@@ -29,16 +30,20 @@ function check_localgroup_access() {
   }
 }
 
+function iw_list_related_posts(){
 
+$html = list_related_posts();
 
+return $html;
+}
 
-function iw_list_childpages(){
+function iw_list_childposts(){
 
 global $post;
 
 if ( is_page() && $post->post_parent ){ 
 	$ancestors = array();
-	$ancestors = get_ancestors($post->ID,'page');
+	$ancestors = get_ancestors($post->ID,'post');
 	$parent = (!empty($ancestors)) ? array_pop($ancestors) : $post->ID;
 	if (!empty($parent)) {
 	  $pages = get_pages(array('child_of'=>$parent));
@@ -49,8 +54,24 @@ if ( is_page() && $post->post_parent ){
       			$page_ids[] = $page->ID;
 			}
     		}
-    		$childpages = wp_list_pages("sort_column=menu_order&title_li=&include=".$parent.','.implode(',',$page_ids)."&echo=0");
-  	  }
+
+		$inpages = implode(',',$page_ids);
+
+		$grouppage = get_post($parent);
+
+		$args =array(
+			'sort_column' =>	'menu_order',
+			'include' => 		$page_ids,
+			'depth' => 		0,
+			'echo' => 		0,
+			'menu_class' =>		'sidebar',
+);
+//		$result = wp_page_menu($args);
+//	return $result;
+		$parentpage = '<a href="' . get_permalink($grouppage) . '">' . get_the_title($grouppage) . '</a>';
+ //   		$childpages = wp_list_pages("sort_column=menu_order&title_li=&include=".$parent.','.implode(',',$page_ids)."&echo=0");
+		$childpages = wp_list_pages($args);  
+	  }
 	}
 
 } else {
@@ -58,12 +79,14 @@ if ( is_page() && $post->post_parent ){
 }
 
 if ($childpages){
-	$string='<ul>' . $childpages . '</ul>';
+	$string = "<ul><li>" . $parentpage . "</li>";
+	$string .=  $childpages;
+	$string .= "</ul>";
 }
 return $string;
 }
 
-add_shortcode('iw_child_pages','iw_list_childpages');
+add_shortcode('iw_related_posts','iw_list_related_posts');
 
 
 /* 
@@ -81,10 +104,10 @@ parent::__construct(
 'relatedpages_widget', 
 
 // Widget name will appear in UI
-__('Related Pages', 'relatedpages_widget_domain'), 
+__('Related Posts', 'relatedpages_widget_domain'), 
 
 // Widget description
-array( 'description' => __( 'Related Pages', 'relatedpages_widget_domain' ), ) 
+array( 'description' => __( 'Related Posts', 'relatedpages_widget_domain' ), ) 
 );
 }
 
@@ -100,7 +123,7 @@ echo $args['before_title'] . $title . $args['after_title'];
 
 // This is where you run the code and display the output
 
-echo do_shortcode('[iw_child_pages]');
+echo do_shortcode('[iw_related_posts]');
 
 echo $args['after_widget'];
 
@@ -111,7 +134,7 @@ if ( isset( $instance[ 'title' ] ) ) {
 $title = $instance[ 'title' ];
 }
 else {
-$title = __( 'Related Pages', 'relatedpages_widget_domain' );
+$title = __( 'Related Posts', 'relatedpages_widget_domain' );
 }
 // Widget admin form
 ?>

@@ -1,4 +1,6 @@
 1) Subscriber Role is not persisting when users are promoted to pending member validation; this persistence is necessary for sync with Mailchimp.
  -- It was working at some point.
- 
+2) Join Group BUtton (on Topic group) is not working. PID is not being set. -- Not sure if it is related to change in Template.
+3) Related Forums are not appearing (not certain if i already wrote this code)
+4) Title is missing from Posts and Pages (due to Side Navigation template - template needs to be modified.)
  

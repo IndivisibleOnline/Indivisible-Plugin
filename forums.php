@@ -6,11 +6,12 @@ add_shortcode('iw_groupforums','restrict_forums_to_group');
 
 function get_forum_id(){
 
-	$cid = get_current_group();
-	$pods = pods('topic_groups', $cid);
+//	$cid = get_current_group();
+	$cid = get_group_info();
+	$pods = pods('topic_groups', $cid['id']);
 	$fpod = $pods->field('forum');
-	$forumid = $fpod['ID'];
-
+	$forumid = implode(",",$fpod);
+// echo "forumid = ". $forumid;
 return $forumid;
 
 }
@@ -53,7 +54,6 @@ $params = array (
 
  bbp_list_forums($params);
 
-
 }
 
 
@@ -85,6 +85,8 @@ if ( ! empty( $title ) )
 echo $args['before_title'] . $title . $args['after_title'];
 
 widget_forums();
+restrict_forums_to_group();
+
 // echo do_shortcode('[bbp-forum-index]');
 echo $args['after_widget'];
 

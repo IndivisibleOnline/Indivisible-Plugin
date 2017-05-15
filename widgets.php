@@ -71,33 +71,34 @@ array( 'description' => __( 'Join an IW Workgroup', 'join_widget_domain' ), )
 // Creating widget front-end
 // This is where the action happens
 public function widget( $args, $instance ) {
+global $post;
 $title = apply_filters( 'widget_title', $instance['title'] );
 // before and after widget arguments are defined by themes
 echo $args['before_widget'];
-if ( ! empty( $title ) )
+// if ( ! empty( $title ) )
 // echo $args['before_title'] . $title . $args['after_title'];
 
-// $pid = get_current_group();
 $gid = get_group_info();
-$pid = $gid['id'];
-$ug=get_topic_groups();
-
+$ug= get_topic_groups();
 $status=0;
+
 foreach($ug as $key => $value){
-	if ($pid == $value){
+	if ($gid['id'] == $value){
 		$status = 1;
 	}
 	}
+$groupid = $gid['id'];
+
 if ($status){
 
-echo __( '<form action="https://www.indivisiblewestchester.org/wp-admin/admin-post.php" method="post" name="leavetopicgroup"><input type="hidden" name="action" value="leavetopicgroup"/><input type="hidden" name="pid" value="' . $pid .'"/><center><input type="submit" value="Leave GROUP"></center></form>', 'join_widget_domain' );
+echo __( '<form action="https://www.indivisiblewestchester.org/wp-admin/admin-post.php" method="post" name="leavetopicgroup"><input type="hidden" name="action" value="leavetopicgroup"/><input type="hidden" name="pid" value="' . $groupid .'"/><center><input type="submit" value="Leave GROUP"></center></form>', 'join_widget_domain' );
 echo $args['after_widget'];
 
 } else {
 
 
 // This is where you run the code and display the output
-echo __( '<form action="https://www.indivisiblewestchester.org/wp-admin/admin-post.php" method="post" name="jointopicgroup"><input type="hidden" name="action" value="jointopicgroup"/><input type="hidden" name="pid" value="' . $pid .'"/><center><input type="submit" value="JOIN GROUP"></center></form>', 'join_widget_domain' );
+echo __( '<form action="https://www.indivisiblewestchester.org/wp-admin/admin-post.php" method="post" name="jointopicgroup"><input type="hidden" name="action" value="jointopicgroup"/><input type="hidden" name="pid" value="' . $groupid .'"/><center><input type="submit" value="JOIN GROUP"></center></form>', 'join_widget_domain' );
 echo $args['after_widget'];
 
 }
@@ -177,15 +178,17 @@ if (authorized_user(array('administrator','group leader','groups_administrator',
 
 } else {
 	if (authorized_user(array('subscriber'))){
-	 	echo __('Please join a local group.','iw_widget_domain');
-	} elseif(authorized_user(array('pending_member_validation'))) {
-		echo __('Your request is pending... Thanks for your patience.','iw_widget_domain');
-	} else {
-	echo __( do_shortcode('[iw_usergroups]') . ' <br> ' . do_shortcode('[iw_usergroups type="topic"]')  , 'iwleader_widget_domain' );
+	 	$resp = 'Please join a local group.';
+	} 
+	if(authorized_user(array('pending_member_validation'))) {
+		$resp = 'Your request is pending... Thanks for your patience.';
+	} 
+	if(authorized_user(array('group_member'))) {
+		$resp = do_shortcode('[iw_usergroups]') . ' <br> ' . do_shortcode('[iw_usergroups type="topic"]');
 	}
+	echo __($resp,'iw_widget_domain');
 }
 echo $args['after_widget'];
-
 }
 // Widget Backend
 public function form( $instance ) {
