@@ -1,5 +1,6 @@
 <?php
 
+
 // Requries PODS and UAM Plugins
 
 include(dirname(__FILE__).'/user_mgt.php');
@@ -8,6 +9,7 @@ include(dirname(__FILE__).'/groups.php');
 include(dirname(__FILE__).'/widgets.php');
 include(dirname(__FILE__).'/admin.php');
 include(dirname(__FILE__).'/iw_posts.php');
+include(dirname(__FILE__).'/events.php');
 
 if ( ! function_exists('write_log')) {
    function write_log ( $log )  {
@@ -19,18 +21,30 @@ if ( ! function_exists('write_log')) {
    }
 }
 
+function iw_log($log){
+$date = date("Y-m-d h:m:s");
+$file = __FILE__;
+ $message = "[{$date}][{$file}]". $log . PHP_EOL;
+	error_log($message,3,dirname(__FILE__).'/iwlog.log');
+}
 
+/*
+    @brief: Check whether the currently active user is 'authorized' for a given (or any) role
+    @param: $role - the (string) roll we want to check to see if the user is in
+    @return: true if the currently active user is privileged for that role, false else
 
+    Default input of null, checks to see if loaded user is part of a 'leadership' role
+*/
 function authorized_user($role = null){
 	$allowed_roles='';
 	$result = false;
 
-	
+
 	if (empty($user)){
 		$current_user = wp_get_current_user();
 		$user_id = $current_user->ID;
 		$user_role = $current_user->roles;
-		
+
 		} else {
 		$user_role = $user->roles;
 		}
@@ -39,7 +53,7 @@ function authorized_user($role = null){
 		} else {
 		$allowed_roles = $role;
 		}
-	
+
 	if (is_array($user_role)){
 		$myroles = explode(",",implode(",",$user_role));
 	} else {
@@ -57,9 +71,12 @@ function authorized_user($role = null){
 }
 
 
+/*
+    @brief: Get list of Groups of a specific type for the active user
+    @param: $atts - (string) label describing type of group we want the list of ('topic' or 'local')
+    @return: Returns the HTML of how we want to render this data (not an actual list of groups)
+*/
 function get_user_group_list($atts){
-
-// Get list of Groups (topic or local based on $atts) for a specific user
 
  $atts = array_change_key_case((array)$atts, CASE_LOWER);
     // override default attributes with user attributes
@@ -116,6 +133,10 @@ function get_user_group_list($atts){
 }
 
 
+/*
+    @brief: Get list of all available local groups
+    @return: Array of PODS objects - complete list of local groups in system
+*/
 function get_local_group_list(){
 
 $param = array(
@@ -134,6 +155,14 @@ return $allpods;
 
 add_shortcode('iw_usergroups','get_user_group_list');
 
+
+/*
+    @brief: Get list of Groups of a specific type for the active user
+    @param: $atts - (string) label describing type of group we want the list of ('topic' or 'local')
+    @return: Returns the HTML of one way to render this data (not an actual list of groups)
+
+    TODO:  I believe this is not actually used anywhere - can this be removed entirely?
+*/
 function get_group_list($atts){
 
 // Get list of Groups (topic or local based on $atts) for a specific user
@@ -158,13 +187,13 @@ function get_group_list($atts){
 	$gname = $allpods->display('name') ;
 	$grpfield = $allpods->field( 'group_page_url');
 	$grpurl= $grpfield ['pod_item_id'];
-	
+
         $htmlresult .= "<li><a href='" . get_permalink($grpurl) . "'>" . $gname . " </a></li>";
-       }  
+       }
        }
 // Loop over each item since it's an array
-            
-          
+
+
 
     $htmlresult .= "</ul></div>";
 
@@ -175,90 +204,95 @@ function get_group_list($atts){
 add_shortcode('iw_listgroups','get_group_list');
 
 
+/*
+    @brief: Get list of topic groups for the current user
+    @return: Returns the an array of PODS objects - the topic groups related to a user
+*/
 function get_topic_tax_groups(){
 
-// Get list of Groups (topic or local based on $atts) for a specific user
+    // Get list of Groups (topic or local based on $atts) for a specific user
+    global $current_user;
+    wp_get_current_user();
 
-	  global $current_user;
-    	  wp_get_current_user();
+    if($userid == null){
+        $userid = $current_user->ID;
+    }
 
-	if($userid == null){
-            $userid = $current_user->ID;
-	}
+     $tpod = pods("user", $userid);
+     $trelated = $tpod->field( 'topic_groups' );
 
-             $tpod = pods("user", $userid);
-             $trelated = $tpod->field( 'topic_groups' );
-
-
-	return $trelated;
-
+    return $trelated;
 }
 
 
 add_action('admin_post_joingroup','frm_join_group');
 add_action('admin_post_nopriv_joingroup','frm_join_group');
 
+
+/*
+    @brief: Calls add_user_to_group for the current user and group type/id in the _REQUEST object
+
+    As a side efffect, redirects via 'get_permalink'
+*/
 function frm_join_group() {
+    global $current_user;
+
+    if ( ! empty( $_REQUEST ) ) {
+
+        $type = $_REQUEST['type'];
+        $grpid = $_REQUEST['gid'];
+        // $user_id = $_POST['userid'];
+
+        $current_user = wp_get_current_user();
+        $user_id = $current_user->ID;
+        // Sanitize the POST field
+        // Generate email content
+        // Send to appropriate email
+
+        //      global $ultimatemember;
+        //      $current_user = wp_get_current_user();
+        //      $user_id = $current_user->ID;
+        //      $user_role = $current_user->roles;
+        //      um_fetch_user($user_id);
+        //      $um_role = um_user('role');
+        //      $ur = new WP_User ($user_id);
 
 
-global $current_user;
+        add_user_to_group($user_id,$type,$grpid);
+    }
 
-if ( ! empty( $_REQUEST ) ) {
- 
- $type = $_REQUEST['type'];
- $grpid = $_REQUEST['gid'];
-// $user_id = $_POST['userid'];
-
-     $current_user = wp_get_current_user();
-     $user_id = $current_user->ID;
-   // Sanitize the POST field
-    // Generate email content
-    // Send to appropriate email
-
-  //      global $ultimatemember;
-  //      $current_user = wp_get_current_user();
-  //      $user_id = $current_user->ID;
-  //      $user_role = $current_user->roles;
-  //      um_fetch_user($user_id);
-  //      $um_role = um_user('role');
-  //      $ur = new WP_User ($user_id);
-
-
-	add_user_to_group($user_id,$type,$grpid);
-}
-
- wp_redirect( get_permalink() ); exit;
+    wp_redirect( get_permalink() ); exit;
 
 }
-
-
-
-// Prevent users from seeing administrators
 
 add_action('pre_user_query','yoursite_pre_user_query');
 
+/*
+    @brief: Prevent users from seeing administrators
+*/
 function yoursite_pre_user_query($user_search) {
     $user = wp_get_current_user();
 
-    if ( $user->roles[0] != 'administrator' ) { 
+    if ( $user->roles[0] != 'administrator' ) {
         global $wpdb;
 
-        $user_search->query_where = 
-        str_replace('WHERE 1=1', 
+        $user_search->query_where =
+        str_replace('WHERE 1=1',
             "WHERE 1=1 AND {$wpdb->users}.ID IN (
-                 SELECT {$wpdb->usermeta}.user_id FROM $wpdb->usermeta 
-                    WHERE {$wpdb->usermeta}.meta_key = '{$wpdb->prefix}user_level' 
-                    AND {$wpdb->usermeta}.meta_value = 0)", 
+                 SELECT {$wpdb->usermeta}.user_id FROM $wpdb->usermeta
+                    WHERE {$wpdb->usermeta}.meta_key = '{$wpdb->prefix}user_level'
+                    AND {$wpdb->usermeta}.meta_value = 0)",
             $user_search->query_where
         );
 
     }
 }
 
-
-
-//this will prevent users from promoting others to administrator
-
+/*
+    @brief: Prevent users from promoting others to administrator
+    @param: $all_roles - Complete list of roles available on system
+    @return: Version of originally input roles list without leadership roles
+*/
 function deny_change_to_admin( $all_roles )
 
 {
@@ -280,17 +314,24 @@ function deny_change_to_admin( $all_roles )
 
     return $all_roles;
 }
+
+/*
+    @brief: Applies a filter to the roles available for the current user to apply based on function deny_change_to_admin
+*/
 function deny_rolechange()
 {
     add_filter( 'editable_roles', 'deny_change_to_admin' );
 }
+
 add_action( 'after_setup_theme', 'deny_rolechange' );
 
 
 
-//Expand Author Drop down to include Group Leaders, and IW Leadership
-
-
+/*
+    @brief: Expand Author Drop down to include Group Leaders, and IW Leadership
+    @param: $output - Array to be used for call to wp_dropdown_users, used for available list of authors
+    @return: Modified version of $output, which includes an expanded list of users
+*/
 function author_override( $output ) {
     global $post, $user_ID;
 
@@ -322,12 +363,12 @@ $userslist = implode( ',', $array_of_users_ids );
 
     // replacement call to wp_dropdown_users
       $output = wp_dropdown_users(array(
-        'echo' => 0,
-	'include' => $userslist,
-	'orderby' => 'display_name',
-        'name' => 'post_author_override_replaced',
-        'selected' => empty($post->ID) ? $user_ID : $post->post_author,
-        'include_selected' => true,
+                                        'echo' => 0,
+                                        'include' => $userslist,
+                                        'orderby' => 'display_name',
+                                        'name' => 'post_author_override_replaced',
+                                        'selected' => empty($post->ID) ? $user_ID : $post->post_author,
+                                        'include_selected' => true,
       ));
 
       // put the original name back
@@ -386,8 +427,24 @@ add_shortcode('iw_subscribe','forcesubscribe');
   * Forces Role to Subscriber
   * Use with CAUTION
 */
-function forcesubscribe($args){
 
+add_action('set_user_role','iw_setrolehook',10,3);
+
+function iw_setrolehook( $user_id,$role,$old_roles){
+
+iw_log('function: set_user_role role: ' . $role . '  old_roles: ' . implode(", ",$old_roles) . '  userid: ' . $user_id);
+
+ if (in_array('subscriber',$old_roles)){
+	$user = get_user_by('id',$user_id);
+	remove_action('set_user_role','iw_setrolehook');
+	$user->add_role('subscriber');
+	add_action('set_user_role','iw_setrolehook',10,3);
+
+ }
+}
+
+function forcesubscribe($args){
+iw_log('forcesubscribe');
 $rolearray = array('pending_member_validation','group_leader','group_member','iw_leadership','groups_administrator','administrator');
 $args =  array('role__in' => $rolearray);
 $userlist = get_users($args);
@@ -431,7 +488,7 @@ function promote_user($userid,$newrole=null){
   else
   {
   // There was an error, probably that user doesn't exist.
-    return result($um_role,$user); 
+    return result($um_role,$user);
 
 }
 }
@@ -441,7 +498,7 @@ function confirm_email($content=null){
  	$current_user = wp_get_current_user();
 	$user_id = $current_user->ID;
 	$user_role = $current_user->roles;
-	$user_meta=get_userdata($user_id);
+	$user_meta= get_userdata($user_id);
 //	$user_roles=$user_meta->roles;
 	$new_role = "subscriber";
 
@@ -461,14 +518,16 @@ function confirm_email($content=null){
 		$user_id = wp_update_user( array( 'ID' => $user_id, 'role' => 'subscriber' ) );
 		$ultimatemember->user->set_role( 'subscriber' );
 		return result('pass',$current_user);
-	}
-	else
-	{
+		}
+		else
+		{
 	// There was an error, probably that user doesn't exist.
-		return result($um_role,$current_user);	
-	}
+		$log = "Function: Confirm Email: role=".$um_role." user=".$current_user->ID;
+		iw_log($log);
+		return result('fail',$current_user);
+		}
 
-}
+	}
 
 }
 
@@ -487,7 +546,7 @@ function result($arg,$usr){
 
 		$rtString = "Thank you for confirming your email address. Your account is now active and you are a member. Please <a href='./mygroups'>Click Here to Continue.</a>";
 	} else {
-		$rtString = "There is no need to confirm your email at this time, as you are a " . $arg;
+		$rtString = "There was an error confirming your email address, or perhaps it was previously confirmed. Please contact your site administrator for assistance";
 	}
 		return $rtString;
 

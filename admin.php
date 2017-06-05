@@ -500,7 +500,6 @@ function iw_filter_event_meta_boxes() {
 
 global $post;
 $type = iw_get_type($post);
-echo "<h1>type= " . $type . "</h1>";
 
  if ($type == 'lg_events'){
 	remove_meta_box('topic_groupsdiv', 'tribe_events', 'side');
@@ -717,7 +716,7 @@ remove_meta_box( 'slugdiv',$type,'normal' ); // Slug Metabox
 remove_meta_box( 'trackbacksdiv',$type,'normal' ); // Trackback Metabox
 remove_meta_box( 'categorydiv',$type,'normal' ); // Categories Metabox
 remove_meta_box( 'formatdiv',$type,'normal' ); // Formats Metabox
-remove_meta_box( 'postimagediv',$type,'normal' ); // Featured Image Metabox
+// remove_meta_box( 'postimagediv',$type,'normal' ); // Featured Image Metabox
 
 }
 
@@ -755,7 +754,7 @@ remove_meta_box( 'slugdiv',$type,'normal' ); // Slug Metabox
 remove_meta_box( 'trackbacksdiv',$type,'normal' ); // Trackback Metabox
 remove_meta_box( 'categorydiv',$type,'normal' ); // Categories Metabox
 remove_meta_box( 'formatdiv',$type,'normal' ); // Formats Metabox
-remove_meta_box( 'postimagediv',$type,'normal' ); // Featured Image Metabox
+// remove_meta_box( 'postimagediv',$type,'normal' ); // Featured Image Metabox
 // remove_meta_box( 'submitdiv',$type,'normal' ); // Categories Metabox
 // remove_meta_box( 'tagsdiv-post_tag',$type,'normal' ); // Tags Metabox
 
@@ -773,7 +772,7 @@ remove_meta_box( 'slugdiv','page','normal' ); // Slug Metabox
 remove_meta_box( 'authordiv','page','normal' ); // Author Metabox
 remove_meta_box( 'categorydiv','page','normal' ); // Categories Metabox
 remove_meta_box( 'formatdiv','page','normal' ); // Formats Metabox
-remove_meta_box( 'postimagediv','page','normal' ); // Featured Image Metabox
+// remove_meta_box( 'postimagediv','page','normal' ); // Featured Image Metabox
 remove_meta_box( 'submitdiv','page','normal' ); // Categories Metabox
 remove_meta_box( 'tagsdiv-post_tag','page','normal' ); // Tags Metabox
 
