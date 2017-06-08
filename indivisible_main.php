@@ -22,7 +22,7 @@ if ( ! function_exists('write_log')) {
 }
 
 function iw_log($log){
-$date = date("Y-m-d h:m:s");
+$date = date("Y-m-d h:i:s");
 $file = __FILE__;
  $message = "[{$date}][{$file}]". $log . PHP_EOL;
 	error_log($message,3,dirname(__FILE__).'/iwlog.log');
@@ -390,9 +390,9 @@ $user_id = wp_update_user( array( 'ID' => $user_id, 'role' => 'pending' ) );
 
 if ( is_wp_error( $user_id ) ) {
 	// There was an error, probably that user doesn't exist.
-	echo 'error';
+	iw_log('error registering user');
 } else {
-	echo ' success ';
+	iw_log('success registering user ' . $user_id);
 	// Success!
 }
 
@@ -434,7 +434,7 @@ function iw_setrolehook( $user_id,$role,$old_roles){
 
 iw_log('function: set_user_role role: ' . $role . '  old_roles: ' . implode(", ",$old_roles) . '  userid: ' . $user_id);
 
- if (in_array('subscriber',$old_roles)){
+ if (in_array('subscriber',$old_roles) && $role != 'pending'){
 	$user = get_user_by('id',$user_id);
 	remove_action('set_user_role','iw_setrolehook');
 	$user->add_role('subscriber');
@@ -492,6 +492,39 @@ function promote_user($userid,$newrole=null){
 
 }
 }
+
+function account_activation($user_id){
+ global $ultimatemember;
+ iw_log('account activation');
+/*  $current_user = wp_get_current_user();
+ if ($current_user->ID != $user_id){
+   $result = "You are not who you think you are.";
+   $result .= "Activated user = " .  $user_id;
+   $result .= " Current User = ". $current_user->ID;
+   iw_log($result);
+   echo $result;
+   return result('fail',$current_user);
+  } else {
+*/
+        um_fetch_user($user_id);
+        $um_role = um_user('role');
+	$ur = new WP_User ($user_id);
+
+          if ($um_role == "unverified-member"){
+            $ur->set_role( $new_role );
+            $user_id = wp_update_user( array( 'ID' => $user_id, 'role' => 'subscriber' ) );
+            $ultimatemember->user->set_role( 'subscriber' );
+            return result('pass',$current_user);
+            } else
+            {
+            // There was an error, probably that user doesn't exist.
+           $log = "Function: Confirm Email: role=".$um_role." user=".$current_user->ID;
+           iw_log($log);
+           return result('fail',$current_user);
+           }
+// }
+}
+
 
 function confirm_email($content=null){
 	global $ultimatemember;
@@ -552,9 +585,9 @@ function result($arg,$usr){
 
 }
 
-add_shortcode('iw_activate','confirm_email');
+// add_shortcode('iw_activate','confirm_email');
 
-
+add_action('um_after_user_is_approved','account_activation',6,1 );
 
 if (!function_exists('write_log')) {
     function write_log ( $log )  {
