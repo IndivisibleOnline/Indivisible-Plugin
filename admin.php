@@ -38,6 +38,7 @@ if (isset($user_groups)){
   }
    	iw_bar_render_item('Manage Pending Members','/membershipapproval','Manage');
 	iw_bar_render_item('Manage Event Requests','/eventrequests','Manage');
+
   }
 }
 
@@ -241,6 +242,7 @@ function set_local_event_category($post_id,$group_id){
         $grptax = (array)$grptax;
 //	write_log('group id = ' . $group_id . ' and event id is '. $grpfield['term_id']);
         $setresult = wp_set_object_terms($post_id,$grptax,'tribe_events_cat',true);
+
 }
 
 function save_event_categories($post_id,$categories){
@@ -248,9 +250,6 @@ function save_event_categories($post_id,$categories){
 	$setresult = wp_set_object_terms($post_id,$categories,'tribe_events_cat',false);
 
 }
-
-
-
 
 function save_localgroup_event($post_id,$post){
 $type = iw_get_type($post);
@@ -504,6 +503,8 @@ function iw_filter_event_meta_boxes() {
 
 global $post;
 $type = iw_get_type($post);
+
+echo "<h1>type= " . $type . "</h1>";
 
  if ($type == 'lg_events'){
 	remove_meta_box('topic_groupsdiv', 'tribe_events', 'side');

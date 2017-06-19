@@ -236,7 +236,6 @@ function get_topic_tax_groups(){
 add_action('admin_post_joingroup','frm_join_group');
 add_action('admin_post_nopriv_joingroup','frm_join_group');
 
-
 /*
     @brief: Calls add_user_to_group for the current user and group type/id in the _REQUEST object
 
@@ -270,6 +269,12 @@ function frm_join_group() {
     }
 
     wp_redirect( get_permalink() ); exit;
+
+        add_user_to_group($user_id,$type,$grpid);
+    }
+
+    wp_redirect( get_permalink() ); exit;
+
 
 }
 
@@ -563,10 +568,12 @@ function confirm_email($content=null){
 		else
 		{
 	// There was an error, probably that user doesn't exist.
+
 		$log = "Function: Confirm Email: role=".$um_role." user=".$current_user->ID;
 		iw_log($log);
 		return result('fail',$current_user);
 		}
+
 
 	}
 

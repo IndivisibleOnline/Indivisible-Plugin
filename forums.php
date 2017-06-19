@@ -58,19 +58,19 @@ $params = array (
 
 
 
-// Creating the widget 
+// Creating the widget
 class forum_widget extends WP_Widget {
 
 function __construct() {
 parent::__construct(
 // Base ID of your widget
-'forum_widget', 
+'forum_widget',
 
 // Widget name will appear in UI
-__('IW Workgroup Forums List', 'forum_widget_domain'), 
+__('IW Workgroup Forums List', 'forum_widget_domain'),
 
 // Widget description
-array( 'description' => __( 'List IW Workgroup Forums', 'forum_widget_domain' ), ) 
+array( 'description' => __( 'List IW Workgroup Forums', 'forum_widget_domain' ), )
 );
 }
 
@@ -96,7 +96,7 @@ echo $args['after_widget'];
 
 
 
-// Widget Backend 
+// Widget Backend
 public function form( $instance ) {
 if ( isset( $instance[ 'title' ] ) ) {
 	$title = $instance[ 'title' ];
@@ -107,12 +107,12 @@ else {
 // Widget admin form
 ?>
 <p>
-<label for="<?php echo $this->get_field_id( 'title' ); ?>"><?php _e( 'Title:' ); ?></label> 
+<label for="<?php echo $this->get_field_id( 'title' ); ?>"><?php _e( 'Title:' ); ?></label>
 <input class="widefat" id="<?php echo $this->get_field_id( 'title' ); ?>" name="<?php echo $this->get_field_name( 'title' ); ?>" type="text" value="<?php echo esc_attr( $title ); ?>" />
 </p>
-<?php 
+<?php
 }
-	
+
 // Updating widget replacing old instances with new
 public function update( $new_instance, $old_instance ) {
 $instance = array();
@@ -129,4 +129,3 @@ add_action( 'widgets_init', 'forum_load_widget' );
 
 
 ?>
-
