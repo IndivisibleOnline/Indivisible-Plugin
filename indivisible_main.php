@@ -153,6 +153,14 @@ return $allpods;
 
 }
 
+function get_topic_group_list(){
+$param = array(
+	'limit' => -1,
+	);
+$allpods = pods('topic_groups',$param);
+return $allpods;
+}
+
 add_shortcode('iw_usergroups','get_user_group_list');
 
 

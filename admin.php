@@ -32,8 +32,12 @@ if (isset($user_groups)){
 
  // If user is Authorized, give them Link to Manage Members 
   if(authorized_user()){
-   	iw_bar_render_item('Manage Pending Members','/membershipapproval');
-	iw_bar_render_item('Manage Event Requests','/eventrequests');
+	iw_bar_render_item('Manage','/');
+ if(authorized_user(array('administrator','group_leader'))){
+	iw_bar_render_item('Manager Group Leaders','/groupmembers','Manage');
+  }
+   	iw_bar_render_item('Manage Pending Members','/membershipapproval','Manage');
+	iw_bar_render_item('Manage Event Requests','/eventrequests','Manage');
   }
 }
 

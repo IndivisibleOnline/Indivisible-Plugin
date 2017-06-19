@@ -830,3 +830,216 @@ function iw_updatemembership($atts) {
  		return;
  	}
  } 
+
+
+function list_groupinfo($gid){
+
+// Retrieve Group Details
+
+return;
+}
+
+
+function list_groupmembers($id){
+	if ($_REQUEST['type'] == 2){
+	echo '<font size="+3"><a href="/groupmembers/?type=2">Topic Groups<a/></font>&nbsp;|&nbsp;<a href="/groupmembers/?type=1">Local Groups</a><br>';
+	} else {
+	echo '<nobr><a href="/groupmembers/?type=2">Topic Groups<a/>&nbsp;|&nbsp;<font size="+3"><a href="/groupmembers/?type=1">Local Groups</a></h3></font><br>';
+	}
+?>
+	<form action="<?php echo esc_url( admin_url('admin-post.php') ); ?>" method="post" name="selectgroup">
+	<input type="hidden" name="action" value="selectgroup" />
+<?php
+// Select the group
+ if ($_REQUEST['type'] == 2){
+    $groups = get_topic_group_list();
+    echo '<input type="hidden" name="type" value="2">';
+	} else {      
+    $groups = get_local_group_list();
+	}
+echo '<select name="gid" id="gid">';
+    while ($groups->fetch()){
+            $gname = $groups->field('name') ;
+            $gid = $groups->field('term_id');
+	    $selected = ($gid == $_REQUEST['gid']) ? 'selected' : 'not';
+            ?>
+            <option value="<?php echo $gid; ?>" <?php echo $selected; ?> > <?php echo $gname; ?></option>
+    <?php
+            } 
+ echo '</select><input type="submit" name=submit" value="Select"/></form><br><br>';
+
+if ($_REQUEST['gid'] != null){
+	$type = ($_REQUEST['type'] == 2) ? 'topic_groups' : 'local_groups';
+	$gid = $_REQUEST['gid'];
+	$pods = pods($type, $gid);
+	$lpod = $pods->field('leaders');
+	$mpod = $pods->field('members');
+	$name = $pods->display('name');
+	echo '<strong>'.$name.'</strong>';
+	$emails='';
+	echo '<form action="' .  esc_url( admin_url('admin-post.php') ) . '"  method="post" name="selectgroup">';
+	echo '<input type="hidden" name="action" value="demotemember" />';
+	echo '<input type="hidden" name="gid" value="' . $_REQUEST['gid'] . '" />';
+	echo '<input type="hidden" name="type" value="' . $_REQUEST['type'] . '" />';
+	echo '<strong>Leaders</strong><br>';
+	foreach($lpod as $ll){
+		echo '<input type="radio" name="userid" value ="' . $ll['ID'] . '">' . $ll[ 'user_email'] . '<br>';
+		}
+	echo '<input type="submit" name="demote" value="Demote"/></form>';
+
+	echo '<br><br>Members<br>';
+	echo '<form action="' .  esc_url( admin_url('admin-post.php') ) . '"  method="post" name="selectgroup">';
+	echo '<input type="hidden" name="action" value="promotemember" />';
+	echo '<input type="hidden" name="gid" value="' . $_REQUEST['gid'] . '" />';
+	echo '<input type="hidden" name="type" value="' . $_REQUEST['type'] . '" />';
+	foreach($mpod as $mm){
+		$ur = getuserroles($mm[ 'ID'] );
+		echo '<input type="radio" name="userid" value="' . $mm[ 'ID' ] . '">' . $mm['user_email']  . ' (' . $ur . ')<br>';
+	}
+	echo '<input type="submit" name="promote" value="Promote"/></form>';
+}
+
+}
+
+function post_groupmembers(){
+	wp_redirect('/groupmembers?gid=' . $_POST['gid'] . '&type=' . $_REQUEST['type']);
+}
+
+add_action('admin_post_selectgroup','post_groupmembers');
+add_action('admin_post_nopriv_selectgroup','post_groupmembers');
+
+add_action('admin_post_promotemember','promote_member_to_leader');
+add_action('admin_post_nopriv_promotemember','promote_member_to_leader');
+
+add_action('admin_post_demotemember','demote_leader_to_member');
+add_action('admin_post_nopriv_demotemember','demote_leader_to_member');
+
+function promote_member_to_leader($member){
+	
+// Insert Promote Leader Code here
+	$type = ($_REQUEST['type'] == 2) ? 'topic' : 'local';
+
+	$user_id = $_POST['userid'];
+	$ur = new WP_User($user_id);
+    	$ur->add_role('group_leader');
+	promote_groupleader($user_id,$type,$_POST['gid']);
+	wp_redirect('/groupmembers?gid=' . $_POST['gid'] . '&type=' . $REQUEST['type']);
+}
+
+
+function demote_leader_to_member($member){
+
+	$user_id = $_POST['userid'];
+	$ur = new WP_User($user_id);
+    	$ur->remove_role('group_leader');
+
+	$tpod = pods('local_groups', $_POST['gid']);
+	$tpod->remove_from('leaders',$user_id);
+
+	wp_redirect('/groupmembers?gid=' . $_POST['gid'] . '&type=' . $REQUEST['type']);
+}
+
+
+add_shortcode('iw-GroupMembers','list_groupmembers');
+
+
+function promote_groupleader($uid,$gtype,$grpid){
+// Arguments are UserID, Group Type (topic or local), and Group ID
+
+if( $gtype == 'topic' ) {
+	$grouptype = 'topic_groups';
+	} else {
+	$grouptype = 'local_groups';
+	}
+
+	$tpod = pods($grouptype, $grpid);
+	$tpod->add_to('leaders',$uid);
+}
+
+
+/*
+ NAME: Make Group Leader
+ Shortcode: iw-promotettoGL
+ FUNCTION: Displays form to approve or assign pending users
+ RETURNS: Nothing; Displays forms
+*/
+
+// Build a Form to Enable a GL or Admin to approve members
+
+function promote_to_groupleader( ) {
+if (authorized_user()){
+
+	global $ultimatemember;
+		if ( current_user_can( 'promote_users' ) ) {
+
+		//	$um_user_role = get_user_meta($user->ID,'role',true);
+		$valid_roles = array('group_member','pending_member_validation');
+		get_header();
+	
+		ob_start();		
+
+		if (authorized_user(array('administrator','groups_administrator'))){ 	
+
+			echo "<strong> CREATE GROUP LEADER </strong>";
+
+?>
+			<table class="form-table">
+				<tbody>
+					<tr>
+						<th>  <label for="username">PROMOTE TO GROUP LEADER</label>
+							
+						</th> 
+
+						<tr>
+						<td>
+							<form action="<?php echo esc_url( admin_url('admin-post.php') ); ?>" method="post" name="promotetoGL">
+							<input type="hidden" name="action" value="makegroupleader" />
+							<select name="user" id ="user">
+							<?php 
+							$pcount = 0;
+							foreach(get_users_by_role($valid_roles) as $selecteduser){ ?>
+							<?php um_fetch_user($selecteduser->ID);
+							$pcount += 1;
+							$localname='';
+ 							if (( $ultimatemember->user->get_role() == 'pending-validation' ) ) 
+ 									{
+									$local = get_local_group($selecteduser->ID);
+								 	if ($local){	
+									$localname = " @ " .$local['name'];
+									}
+							?>
+ 							<option value="<?php echo $selecteduser->ID; ?>"> <?php echo $selecteduser->user_email . " (" . $selecteduser->display_name .") - [" . getuserroles($selecteduser->ID) . $localname . "]"; ?></option>
+							<?php
+									}
+
+							 } ?> 
+							</select>
+							<select name="gid" id="gid">
+								<?php
+								$groups = get_local_group_list();
+								while ($groups->fetch()){
+									$gname = $groups->field('name') ;
+									$gid = $groups->field('term_id');
+									?>
+									<option value="<?php echo $gid; ?>"> <?php echo $gname; ?></option>
+							<?php
+								} ?> </select>
+							<?php
+														
+							if (authorized_user(array('administrator','groups_administrator'))){ 
+								echo "<br>This will only assign the user to a Group Leader for Validation.";
+							}
+							?>
+						        <input type="submit" name="approve" value="Assign to Group"></form>
+						</td>
+					</tr>
+				</tbody>
+			</table><br><br><br>
+		<?php 
+		}
+
+	 }
+ob_end_flush();
+}
+}
+
