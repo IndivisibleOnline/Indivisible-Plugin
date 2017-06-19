@@ -1,5 +1,6 @@
 <?php
 
+
 // Requries PODS and UAM Plugins
 
 include(dirname(__FILE__).'/user_mgt.php');
@@ -20,6 +21,12 @@ if ( ! function_exists('write_log')) {
    }
 }
 
+function iw_log($log){
+$date = date("Y-m-d h:i:s");
+$file = __FILE__;
+ $message = "[{$date}][{$file}]". $log . PHP_EOL;
+	error_log($message,3,dirname(__FILE__).'/iwlog.log');
+}
 
 /*
     @brief: Check whether the currently active user is 'authorized' for a given (or any) role
@@ -146,6 +153,14 @@ return $allpods;
 
 }
 
+function get_topic_group_list(){
+$param = array(
+	'limit' => -1,
+	);
+$allpods = pods('topic_groups',$param);
+return $allpods;
+}
+
 add_shortcode('iw_usergroups','get_user_group_list');
 
 
@@ -221,7 +236,6 @@ function get_topic_tax_groups(){
 add_action('admin_post_joingroup','frm_join_group');
 add_action('admin_post_nopriv_joingroup','frm_join_group');
 
-
 /*
     @brief: Calls add_user_to_group for the current user and group type/id in the _REQUEST object
 
@@ -256,9 +270,13 @@ function frm_join_group() {
 
     wp_redirect( get_permalink() ); exit;
 
+        add_user_to_group($user_id,$type,$grpid);
+    }
+
+    wp_redirect( get_permalink() ); exit;
+
+
 }
-
-
 
 add_action('pre_user_query','yoursite_pre_user_query');
 
@@ -282,8 +300,6 @@ function yoursite_pre_user_query($user_search) {
 
     }
 }
-
-
 
 /*
     @brief: Prevent users from promoting others to administrator
@@ -387,9 +403,9 @@ $user_id = wp_update_user( array( 'ID' => $user_id, 'role' => 'pending' ) );
 
 if ( is_wp_error( $user_id ) ) {
 	// There was an error, probably that user doesn't exist.
-	echo 'error';
+	iw_log('error registering user');
 } else {
-	echo ' success ';
+	iw_log('success registering user ' . $user_id);
 	// Success!
 }
 
@@ -424,8 +440,24 @@ add_shortcode('iw_subscribe','forcesubscribe');
   * Forces Role to Subscriber
   * Use with CAUTION
 */
-function forcesubscribe($args){
 
+add_action('set_user_role','iw_setrolehook',10,3);
+
+function iw_setrolehook( $user_id,$role,$old_roles){
+
+iw_log('function: set_user_role role: ' . $role . '  old_roles: ' . implode(", ",$old_roles) . '  userid: ' . $user_id);
+
+ if (in_array('subscriber',$old_roles) && $role != 'pending'){
+	$user = get_user_by('id',$user_id);
+	remove_action('set_user_role','iw_setrolehook');
+	$user->add_role('subscriber');
+	add_action('set_user_role','iw_setrolehook',10,3);
+
+ }
+}
+
+function forcesubscribe($args){
+iw_log('forcesubscribe');
 $rolearray = array('pending_member_validation','group_leader','group_member','iw_leadership','groups_administrator','administrator');
 $args =  array('role__in' => $rolearray);
 $userlist = get_users($args);
@@ -474,12 +506,45 @@ function promote_user($userid,$newrole=null){
 }
 }
 
+function account_activation($user_id){
+ global $ultimatemember;
+ iw_log('account activation');
+/*  $current_user = wp_get_current_user();
+ if ($current_user->ID != $user_id){
+   $result = "You are not who you think you are.";
+   $result .= "Activated user = " .  $user_id;
+   $result .= " Current User = ". $current_user->ID;
+   iw_log($result);
+   echo $result;
+   return result('fail',$current_user);
+  } else {
+*/
+        um_fetch_user($user_id);
+        $um_role = um_user('role');
+	$ur = new WP_User ($user_id);
+
+          if ($um_role == "unverified-member"){
+            $ur->set_role( $new_role );
+            $user_id = wp_update_user( array( 'ID' => $user_id, 'role' => 'subscriber' ) );
+            $ultimatemember->user->set_role( 'subscriber' );
+            return result('pass',$current_user);
+            } else
+            {
+            // There was an error, probably that user doesn't exist.
+           $log = "Function: Confirm Email: role=".$um_role." user=".$current_user->ID;
+           iw_log($log);
+           return result('fail',$current_user);
+           }
+// }
+}
+
+
 function confirm_email($content=null){
 	global $ultimatemember;
  	$current_user = wp_get_current_user();
 	$user_id = $current_user->ID;
 	$user_role = $current_user->roles;
-	$user_meta=get_userdata($user_id);
+	$user_meta= get_userdata($user_id);
 //	$user_roles=$user_meta->roles;
 	$new_role = "subscriber";
 
@@ -499,14 +564,18 @@ function confirm_email($content=null){
 		$user_id = wp_update_user( array( 'ID' => $user_id, 'role' => 'subscriber' ) );
 		$ultimatemember->user->set_role( 'subscriber' );
 		return result('pass',$current_user);
-	}
-	else
-	{
+		}
+		else
+		{
 	// There was an error, probably that user doesn't exist.
-		return result($um_role,$current_user);
-	}
 
-}
+		$log = "Function: Confirm Email: role=".$um_role." user=".$current_user->ID;
+		iw_log($log);
+		return result('fail',$current_user);
+		}
+
+
+	}
 
 }
 
@@ -525,15 +594,15 @@ function result($arg,$usr){
 
 		$rtString = "Thank you for confirming your email address. Your account is now active and you are a member. Please <a href='./mygroups'>Click Here to Continue.</a>";
 	} else {
-		$rtString = "There is no need to confirm your email at this time, as you are a " . $arg;
+		$rtString = "There was an error confirming your email address, or perhaps it was previously confirmed. Please contact your site administrator for assistance";
 	}
 		return $rtString;
 
 }
 
-add_shortcode('iw_activate','confirm_email');
+// add_shortcode('iw_activate','confirm_email');
 
-
+add_action('um_after_user_is_approved','account_activation',6,1 );
 
 if (!function_exists('write_log')) {
     function write_log ( $log )  {

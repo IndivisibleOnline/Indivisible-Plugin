@@ -32,8 +32,13 @@ if (isset($user_groups)){
 
  // If user is Authorized, give them Link to Manage Members 
   if(authorized_user()){
-   	iw_bar_render_item('Manage Pending Members','/membershipapproval');
-	iw_bar_render_item('Manage Event Requests','/eventrequests');
+	iw_bar_render_item('Manage','/');
+ if(authorized_user(array('administrator','group_leader'))){
+	iw_bar_render_item('Manager Group Leaders','/groupmembers','Manage');
+  }
+   	iw_bar_render_item('Manage Pending Members','/membershipapproval','Manage');
+	iw_bar_render_item('Manage Event Requests','/eventrequests','Manage');
+
   }
 }
 
@@ -237,6 +242,7 @@ function set_local_event_category($post_id,$group_id){
         $grptax = (array)$grptax;
 //	write_log('group id = ' . $group_id . ' and event id is '. $grpfield['term_id']);
         $setresult = wp_set_object_terms($post_id,$grptax,'tribe_events_cat',true);
+
 }
 
 function save_event_categories($post_id,$categories){
@@ -244,9 +250,6 @@ function save_event_categories($post_id,$categories){
 	$setresult = wp_set_object_terms($post_id,$categories,'tribe_events_cat',false);
 
 }
-
-
-
 
 function save_localgroup_event($post_id,$post){
 $type = iw_get_type($post);
@@ -500,6 +503,7 @@ function iw_filter_event_meta_boxes() {
 
 global $post;
 $type = iw_get_type($post);
+
 echo "<h1>type= " . $type . "</h1>";
 
  if ($type == 'lg_events'){
@@ -717,7 +721,7 @@ remove_meta_box( 'slugdiv',$type,'normal' ); // Slug Metabox
 remove_meta_box( 'trackbacksdiv',$type,'normal' ); // Trackback Metabox
 remove_meta_box( 'categorydiv',$type,'normal' ); // Categories Metabox
 remove_meta_box( 'formatdiv',$type,'normal' ); // Formats Metabox
-remove_meta_box( 'postimagediv',$type,'normal' ); // Featured Image Metabox
+// remove_meta_box( 'postimagediv',$type,'normal' ); // Featured Image Metabox
 
 }
 
@@ -755,7 +759,7 @@ remove_meta_box( 'slugdiv',$type,'normal' ); // Slug Metabox
 remove_meta_box( 'trackbacksdiv',$type,'normal' ); // Trackback Metabox
 remove_meta_box( 'categorydiv',$type,'normal' ); // Categories Metabox
 remove_meta_box( 'formatdiv',$type,'normal' ); // Formats Metabox
-remove_meta_box( 'postimagediv',$type,'normal' ); // Featured Image Metabox
+// remove_meta_box( 'postimagediv',$type,'normal' ); // Featured Image Metabox
 // remove_meta_box( 'submitdiv',$type,'normal' ); // Categories Metabox
 // remove_meta_box( 'tagsdiv-post_tag',$type,'normal' ); // Tags Metabox
 
@@ -773,7 +777,7 @@ remove_meta_box( 'slugdiv','page','normal' ); // Slug Metabox
 remove_meta_box( 'authordiv','page','normal' ); // Author Metabox
 remove_meta_box( 'categorydiv','page','normal' ); // Categories Metabox
 remove_meta_box( 'formatdiv','page','normal' ); // Formats Metabox
-remove_meta_box( 'postimagediv','page','normal' ); // Featured Image Metabox
+// remove_meta_box( 'postimagediv','page','normal' ); // Featured Image Metabox
 remove_meta_box( 'submitdiv','page','normal' ); // Categories Metabox
 remove_meta_box( 'tagsdiv-post_tag','page','normal' ); // Tags Metabox
 
